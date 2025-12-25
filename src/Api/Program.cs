@@ -156,10 +156,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Database initialization - TEMPORARILY DISABLED FOR DEBUGGING
-Console.WriteLine("⚠️  Database initialization temporarily disabled for debugging");
-/*
-// For production hosting: database file is committed to repo
+// Database initialization and migrations
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -167,14 +164,14 @@ using (var scope = app.Services.CreateScope())
     
     try
     {
-        logger.LogInformation("🔍 Proveravam bazu podataka...");
-        db.Database.EnsureCreated();
-        logger.LogInformation("✅ Baza podataka spremna!");
+        logger.LogInformation("🔍 Applying database migrations...");
+        db.Database.Migrate(); // Apply pending migrations
+        logger.LogInformation("✅ Database migrations applied successfully!");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "❌ Greška pri kreiranju baze");
-        throw; // Re-throw to see the error and stop the app
+        logger.LogError(ex, "❌ Error applying migrations");
+        throw;
     }
 
     // Seed initial data only if database is empty
@@ -283,7 +280,6 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "❌ Greška pri seed-anju baze");
     }
 }
-*/
 
 app.UseSwagger();
 app.UseSwaggerUI();
