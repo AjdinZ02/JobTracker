@@ -268,6 +268,10 @@ app.Use(async (context, next) =>
 app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Health check endpoint for Render
+app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
 app.MapControllers();
 
 app.Run();
