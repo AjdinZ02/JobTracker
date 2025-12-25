@@ -3,8 +3,6 @@ services:
   - type: pserv
     name: jobtracker-db
     plan: free
-    region: frankfurt
-    ipAllowList: []
     databaseName: jobtracker
     databaseUser: jobtracker
 
