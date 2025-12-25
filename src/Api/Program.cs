@@ -47,11 +47,19 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (!string.IsNullOrEmpty(databaseUrl))
     {
-        // PostgreSQL for production (Render provides DATABASE_URL)
+        // PostgreSQL for production - parse Render connection string
         Console.WriteLine("✅ Using PostgreSQL");
         try
         {
-            options.UseNpgsql(databaseUrl);
+            // Render format: postgresql://user:password@host:port/database
+            // Convert to Npgsql format
+            var uri = new Uri(databaseUrl);
+            var userInfo = uri.UserInfo.Split(':');
+            
+            var npgsqlConnectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+            
+            Console.WriteLine($"🔍 Converted connection string (host): {uri.Host}");
+            options.UseNpgsql(npgsqlConnectionString);
             Console.WriteLine("✅ UseNpgsql configured successfully");
         }
         catch (Exception ex)
