@@ -93,6 +93,11 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
+    // Disable automatic OIDC configuration - we're using simple symmetric key
+    options.ConfigurationManager = null;
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
@@ -103,14 +108,8 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtAudience,
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
-        // Don't require kid claim in JWT header
-        TryAllIssuerSigningKeys = false,
         RequireSignedTokens = true
     };
-    
-    // Disable automatic OpenID Connect configuration retrieval
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
     
     // Check if token is blacklisted
     options.Events = new JwtBearerEvents
