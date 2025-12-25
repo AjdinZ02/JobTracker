@@ -156,18 +156,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         logger.LogError(ex, "❌ Greška pri kreiranju baze");
-        // Fallback: delete and recreate
-        try
-        {
-            db.Database.EnsureDeleted();
-            db.Database.EnsureCreated();
-            logger.LogInformation("✅ Baza rekreirana nakon greške");
-        }
-        catch (Exception ex2)
-        {
-            logger.LogError(ex2, "❌ Kritična greška pri kreiranju baze");
-            throw;
-        }
+        throw; // Re-throw to see the error and stop the app
     }
 
     // Seed initial data only if database is empty
