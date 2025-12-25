@@ -36,13 +36,29 @@ var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 Console.WriteLine($"🔍 DATABASE_URL length: {databaseUrl?.Length ?? 0}");
 Console.WriteLine($"🔍 DATABASE_URL starts with: {(string.IsNullOrEmpty(databaseUrl) ? "EMPTY" : databaseUrl.Substring(0, Math.Min(20, databaseUrl.Length)))}...");
 
+// Mask password for logging
+if (!string.IsNullOrEmpty(databaseUrl))
+{
+    var parts = databaseUrl.Split('@');
+    Console.WriteLine($"🔍 Database host part: @{(parts.Length > 1 ? parts[1] : "MISSING")}");
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (!string.IsNullOrEmpty(databaseUrl))
     {
         // PostgreSQL for production (Render provides DATABASE_URL)
         Console.WriteLine("✅ Using PostgreSQL");
-        options.UseNpgsql(databaseUrl);
+        try
+        {
+            options.UseNpgsql(databaseUrl);
+            Console.WriteLine("✅ UseNpgsql configured successfully");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ UseNpgsql failed: {ex.Message}");
+            throw;
+        }
     }
     else
     {
@@ -140,7 +156,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Database initialization - creates database if it doesn't exist
+// Database initialization - TEMPORARILY DISABLED FOR DEBUGGING
+Console.WriteLine("⚠️  Database initialization temporarily disabled for debugging");
+/*
 // For production hosting: database file is committed to repo
 using (var scope = app.Services.CreateScope())
 {
@@ -265,6 +283,7 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "❌ Greška pri seed-anju baze");
     }
 }
+*/
 
 app.UseSwagger();
 app.UseSwaggerUI();
