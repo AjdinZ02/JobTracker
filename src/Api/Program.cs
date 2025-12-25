@@ -102,8 +102,15 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidAudience = jwtAudience,
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        // Don't require kid claim in JWT header
+        TryAllIssuerSigningKeys = false,
+        RequireSignedTokens = true
     };
+    
+    // Disable automatic OpenID Connect configuration retrieval
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
     
     // Check if token is blacklisted
     options.Events = new JwtBearerEvents
