@@ -18,12 +18,22 @@ builder.Logging.AddDebug();
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
-// EF Core (SQLite)
+// EF Core - PostgreSQL (production) or SQLite (development)
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var cs = builder.Configuration.GetConnectionString("DefaultConnection")
-             ?? "Data Source=jobtracker.db";
-    options.UseSqlite(cs);
+    if (!string.IsNullOrEmpty(databaseUrl))
+    {
+        // PostgreSQL for production (Render provides DATABASE_URL)
+        options.UseNpgsql(databaseUrl);
+    }
+    else
+    {
+        // SQLite for local development
+        var cs = builder.Configuration.GetConnectionString("DefaultConnection")
+                 ?? "Data Source=jobtracker.db";
+        options.UseSqlite(cs);
+    }
 });
 
 // JWT Authentication - Environment variable prioritized for production

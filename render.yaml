@@ -1,4 +1,14 @@
 services:
+  # PostgreSQL Database
+  - type: pserv
+    name: jobtracker-db
+    plan: free
+    region: frankfurt
+    ipAllowList: []
+    databaseName: jobtracker
+    databaseUser: jobtracker
+
+  # API Backend
   - type: web
     name: jobtracker-api
     runtime: docker
@@ -12,4 +22,8 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jobtracker-db
+          property: connectionString
     healthCheckPath: /api/health
