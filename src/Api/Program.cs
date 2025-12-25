@@ -7,7 +7,20 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory
+});
+
+// Disable file watching in production (Render free tier fix)
+builder.Host.ConfigureAppConfiguration((context, config) =>
+{
+    config.Sources
+        .OfType<Microsoft.Extensions.Configuration.Json.JsonConfigurationSource>()
+        .ToList()
+        .ForEach(s => s.ReloadOnChange = false);
+});
 
 // log
 builder.Logging.ClearProviders();
