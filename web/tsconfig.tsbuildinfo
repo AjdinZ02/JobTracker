@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/types.ts","./src/components/backgroundcanvas.tsx","./src/pages/details.tsx","./src/pages/list.tsx","./src/pages/login.tsx","./src/pages/new.tsx","./src/pages/register.tsx","./src/pages/stats.tsx","./src/services/auth.ts","./src/services/jobapplications.ts","./src/utils/toast.ts"],"version":"5.9.3"}
