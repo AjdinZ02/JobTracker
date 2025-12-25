@@ -33,16 +33,21 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // EF Core - PostgreSQL (production) or SQLite (development)
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+Console.WriteLine($"🔍 DATABASE_URL length: {databaseUrl?.Length ?? 0}");
+Console.WriteLine($"🔍 DATABASE_URL starts with: {(string.IsNullOrEmpty(databaseUrl) ? "EMPTY" : databaseUrl.Substring(0, Math.Min(20, databaseUrl.Length)))}...");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (!string.IsNullOrEmpty(databaseUrl))
     {
         // PostgreSQL for production (Render provides DATABASE_URL)
+        Console.WriteLine("✅ Using PostgreSQL");
         options.UseNpgsql(databaseUrl);
     }
     else
     {
         // SQLite for local development
+        Console.WriteLine("✅ Using SQLite");
         var cs = builder.Configuration.GetConnectionString("DefaultConnection")
                  ?? "Data Source=jobtracker.db";
         options.UseSqlite(cs);
