@@ -1,0 +1,273 @@
+
+using System.Text.Json.Serialization;
+using Infrastructure.Data;
+using Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// log
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
+// Dynamic port binding - for hosting services (Railway, Render, etc.)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
+// EF Core (SQLite)
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    var cs = builder.Configuration.GetConnectionString("DefaultConnection")
+             ?? "Data Source=jobtracker.db";
+    options.UseSqlite(cs);
+});
+
+// JWT Authentication - Environment variable prioritized for production
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") 
+                ?? builder.Configuration["Jwt:SecretKey"] 
+                ?? throw new InvalidOperationException("JWT SecretKey must be set via JWT_SECRET_KEY environment variable or appsettings");
+
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "JobTracker";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "JobTrackerApi";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+    
+    // Check if token is blacklisted
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            var tokenBlacklist = context.HttpContext.RequestServices.GetRequiredService<ITokenBlacklistService>();
+            var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            
+            if (tokenBlacklist.IsTokenRevoked(token))
+            {
+                context.Fail("Token je opozvan.");
+            }
+            
+            return Task.CompletedTask;
+        }
+    };
+});
+
+builder.Services.AddAuthorization();
+
+// Add Auth Service
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
+
+// Controllers + JSON 
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        o.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); // <-- KLJUČNO
+    });
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// CORS: Dynamic configuration for development and production
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        var allowedOrigins = new List<string> { "http://localhost:5173" };
+        
+        // Add production frontend URL from environment variable
+        var productionUrl = Environment.GetEnvironmentVariable("FRONTEND_URL");
+        if (!string.IsNullOrEmpty(productionUrl))
+        {
+            allowedOrigins.Add(productionUrl);
+        }
+        
+        policy.WithOrigins(allowedOrigins.ToArray())
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+var app = builder.Build();
+
+// Database initialization - creates database if it doesn't exist
+// For production hosting: database file is committed to repo
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        logger.LogInformation("🔍 Proveravam bazu podataka...");
+        db.Database.EnsureCreated();
+        logger.LogInformation("✅ Baza podataka spremna!");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ Greška pri kreiranju baze");
+        // Fallback: delete and recreate
+        try
+        {
+            db.Database.EnsureDeleted();
+            db.Database.EnsureCreated();
+            logger.LogInformation("✅ Baza rekreirana nakon greške");
+        }
+        catch (Exception ex2)
+        {
+            logger.LogError(ex2, "❌ Kritična greška pri kreiranju baze");
+            throw;
+        }
+    }
+
+    // Seed initial data only if database is empty
+    try
+    {
+        if (!db.Users.Any())
+        {
+            logger.LogInformation("📝 Dodajem početne korisnike...");
+            
+            var demoUser = new Domain.Entities.User
+            {
+                Email = "demo@example.com",
+                FirstName = "Demo",
+                LastName = "User",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("demo123"),
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            var testUser = new Domain.Entities.User
+            {
+                Email = "test@example.com",
+                FirstName = "Test",
+                LastName = "User",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("test123"),
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            db.Users.AddRange(demoUser, testUser);
+            db.SaveChanges();
+            
+            logger.LogInformation("✅ Korisnici kreirani: demo@example.com, test@example.com");
+
+            // Add sample job applications for demo user
+            if (!db.JobApplications.Any())
+            {
+                logger.LogInformation("📝 Dodajem primer job aplikacija...");
+                
+                var acme = new Domain.Entities.JobApplication
+                {
+                    UserId = demoUser.Id,
+                    Company = "ACME Corp",
+                    Position = "Frontend Developer",
+                    Location = "Remote",
+                    Status = Domain.Entities.ApplicationStatus.Applied,
+                    AppliedDate = DateTime.UtcNow.AddDays(-10),
+                    Source = "LinkedIn",
+                    JobPostingUrl = "https://www.linkedin.com/jobs/acme-frontend",
+                    ExpectedSalary = 3500,
+                    Notes = "Poslana prijava"
+                };
+                
+                var globex = new Domain.Entities.JobApplication
+                {
+                    UserId = demoUser.Id,
+                    Company = "Globex",
+                    Position = "Full-Stack Engineer",
+                    Location = "Sarajevo",
+                    Status = Domain.Entities.ApplicationStatus.Interview,
+                    AppliedDate = DateTime.UtcNow.AddDays(-20),
+                    Source = "Company site",
+                    ExpectedSalary = 4000,
+                    Notes = "Zakazan tehnički intervju"
+                };
+                
+                db.JobApplications.AddRange(acme, globex);
+                db.SaveChanges();
+                
+                logger.LogInformation($"✅ Kreirano {db.JobApplications.Count()} job aplikacija");
+
+                
+                var g = db.JobApplications.First(x => x.Company == "Globex");
+                db.ApplicationNotes.AddRange(
+                    new Domain.Entities.ApplicationNote
+                    {
+                        JobApplicationId = g.Id,
+                        CreatedAt = DateTime.UtcNow.AddDays(-5),
+                        Content = "HR screening obavljen",
+                        Type = "screening"
+                    },
+                    new Domain.Entities.ApplicationNote
+                    {
+                        JobApplicationId = g.Id,
+                        CreatedAt = DateTime.UtcNow.AddDays(-2),
+                        Content = "Zadatak poslan",
+                        Type = "task"
+                    }
+                );
+                db.SaveChanges();
+                
+                logger.LogInformation($"✅ Kreirano {db.ApplicationNotes.Count()} napomena");
+            }
+            
+            logger.LogInformation("========================================");
+            logger.LogInformation("🎉 Baza inicijalizovana!");
+            logger.LogInformation("Login: demo@example.com / demo123");
+            logger.LogInformation("Login: test@example.com / test123");
+            logger.LogInformation("========================================");
+        }
+        else
+        {
+            logger.LogInformation($"ℹ️  Baza već postoji sa {db.Users.Count()} korisnika");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ Greška pri seed-anju baze");
+    }
+}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+// Rate limiting middleware
+app.UseMiddleware<Infrastructure.Middleware.RateLimitingMiddleware>();
+
+// Security headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Append("Referrer-Policy", "no-referrer");
+    await next();
+});
+
+app.UseCors("Frontend");
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+
+app.Run();
