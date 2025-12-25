@@ -174,6 +174,15 @@ using (var scope = app.Services.CreateScope())
     try
     {
         logger.LogInformation("🔍 Ensuring database is created...");
+        
+        // FORCE recreate on first deploy to clean up migration history
+        var shouldRecreate = Environment.GetEnvironmentVariable("RECREATE_DB") == "true";
+        if (shouldRecreate)
+        {
+            logger.LogWarning("⚠️  RECREATE_DB flag detected - deleting and recreating database!");
+            db.Database.EnsureDeleted();
+        }
+        
         db.Database.EnsureCreated(); // Creates tables if they don't exist
         logger.LogInformation("✅ Database ready!");
     }
