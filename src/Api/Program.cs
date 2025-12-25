@@ -171,16 +171,28 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     
-    try
+    // Retry logic for migrations (sometimes DB is not ready immediately)
+    int retries = 5;
+    for (int i = 0; i < retries; i++)
     {
-        logger.LogInformation("🔍 Applying database migrations...");
-        db.Database.Migrate(); // Apply pending migrations
-        logger.LogInformation("✅ Database migrations applied successfully!");
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "❌ Error applying migrations");
-        throw;
+        try
+        {
+            logger.LogInformation($"🔍 Applying database migrations (attempt {i + 1}/{retries})...");
+            db.Database.Migrate(); // Apply pending migrations
+            logger.LogInformation("✅ Database migrations applied successfully!");
+            break;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, $"❌ Error applying migrations (attempt {i + 1}/{retries})");
+            if (i == retries - 1)
+            {
+                logger.LogError("💥 All migration attempts failed!");
+                throw;
+            }
+            logger.LogInformation($"⏳ Waiting 3 seconds before retry...");
+            Thread.Sleep(3000);
+        }
     }
 
     // Seed initial data only if database is empty
