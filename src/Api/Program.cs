@@ -87,16 +87,15 @@ var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "JobTracker";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "JobTrackerApi";
 
+Console.WriteLine($"🔐 JWT Config - Secret Length: {jwtSecret.Length}, Issuer: {jwtIssuer}, Audience: {jwtAudience}");
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
-    // Disable automatic OIDC configuration - we're using simple symmetric key
-    options.ConfigurationManager = null;
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
+    Console.WriteLine("🔧 Configuring JWT Bearer with SymmetricSecurityKey (NO OIDC)");
     
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -107,9 +106,15 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidAudience = jwtAudience,
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero,
-        RequireSignedTokens = true
+        ClockSkew = TimeSpan.Zero
     };
+    
+    // Critical: Disable OIDC metadata fetch
+    options.Configuration = null;
+    options.ConfigurationManager = null;
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = false;
+    options.UseSecurityTokenValidators = true;
     
     // Check if token is blacklisted
     options.Events = new JwtBearerEvents
