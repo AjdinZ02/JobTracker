@@ -95,7 +95,10 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
-    Console.WriteLine("🔧 Configuring JWT Bearer with SymmetricSecurityKey (NO OIDC)");
+    Console.WriteLine("🔧 Configuring JWT with LEGACY JwtSecurityTokenHandler");
+    
+    // CRITICAL: Force use of legacy JwtSecurityTokenHandler (doesn't require kid)
+    options.UseSecurityTokenValidators = true;
     
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -109,12 +112,10 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
     
-    // Critical: Disable OIDC metadata fetch
+    // Disable OIDC
     options.Configuration = null;
-    options.ConfigurationManager = null;
+    options.MetadataAddress = null;
     options.RequireHttpsMetadata = false;
-    options.SaveToken = false;
-    options.UseSecurityTokenValidators = true;
     
     // Check if token is blacklisted
     options.Events = new JwtBearerEvents
