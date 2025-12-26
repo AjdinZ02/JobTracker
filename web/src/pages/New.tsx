@@ -73,7 +73,7 @@ export default function New() {
             {Statuses.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </label>
-        <label>Datum apliciranja
+        <label>Datum prijave
           <input type="date"
             value={form.appliedDate.slice(0,10)}
             onChange={e => {
@@ -82,13 +82,13 @@ export default function New() {
             }}
           />
         </label>
-        <label>Izvor (LinkedIn, site...)
+        <label>Izvor
           <input value={form.source} onChange={e => set('source', e.target.value)} />
         </label>
         <label>URL oglasa
           <input value={form.jobPostingUrl} onChange={e => set('jobPostingUrl', e.target.value)} />
         </label>
-        <label>Očekivana plata
+        <label>Plata
           <input type="number" value={form.expectedSalary} onChange={e => set('expectedSalary', e.target.value)} />
         </label>
         <label>Napomena

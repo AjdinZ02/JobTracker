@@ -38,12 +38,26 @@
 /* ================== Base ================== */
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
 body {
   margin: 0;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: var(--txt);
   background: var(--bg);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent zoom on input focus for iOS */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: max(16px, 1rem);
+  }
 }
 
 /* ================== Animated Canvas Background ================== */
@@ -68,6 +82,38 @@ body {
   max-width: 1080px;
   margin: 0 auto;
   padding: 24px;
+}
+
+/* Touch-friendly mobile optimizations */
+@media (hover: none) and (pointer: coarse) {
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+  
+  .header nav a {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .chip {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .user-avatar-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .actions a, .actions button {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 /* ================== Header / Navbar ================== */
@@ -283,6 +329,10 @@ body {
 
 /* Responsive design */
 @media (max-width: 1280px) {
+  .container {
+    padding: 20px;
+  }
+  
   .header {
     grid-template-columns: auto 1fr auto auto;
     gap: 14px;
@@ -311,6 +361,10 @@ body {
 }
 
 @media (max-width: 1024px) {
+  .container {
+    padding: 18px;
+  }
+  
   .header {
     grid-template-columns: auto 1fr auto auto;
     gap: 12px;
@@ -349,25 +403,45 @@ body {
     height: 28px;
     font-size: 10px;
   }
+  
+  section {
+    padding: 18px;
+  }
+  
+  h2 {
+    font-size: 22px;
+  }
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
   .header {
-    grid-template-columns: auto 1fr auto auto;
+    grid-template-columns: minmax(0, auto) 1fr auto auto;
     gap: 8px;
-    padding: 8px 12px;
+    padding: 10px 14px;
   }
   
   .header h1 {
     font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .header h1::before {
+    width: 12px;
+    height: 12px;
   }
   
   .header nav {
     gap: 4px;
+    justify-content: center;
   }
   
   .header nav a {
-    padding: 5px 6px;
+    padding: 6px 8px;
     font-size: 11px;
   }
   
@@ -376,58 +450,109 @@ body {
   }
   
   .chip {
-    padding: 2px 5px;
-    font-size: 8px;
+    padding: 3px 6px;
+    font-size: 9px;
   }
   
   .user-avatar-btn {
-    width: 26px;
-    height: 26px;
-    font-size: 9px;
+    width: 30px;
+    height: 30px;
+    font-size: 10px;
+  }
+  
+  section {
+    padding: 16px;
+  }
+  
+  h2 {
+    font-size: 20px;
+  }
+  
+  .filters, .form {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 640px) {
+  .container {
+    padding: 14px;
+  }
+  
   .header {
-    grid-template-columns: auto 1fr auto auto;
-    gap: 6px;
-    padding: 6px 10px;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "logo user"
+      "nav nav"
+      "chips chips";
+    gap: 8px;
+    padding: 10px 12px;
+    align-items: start;
   }
   
   .header h1 {
-    font-size: 12px;
+    grid-area: logo;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   .header h1::before {
-    display: none;
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
   }
   
   .header nav {
-    gap: 2px;
+    grid-area: nav;
+    gap: 6px;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
   
   .header nav a {
-    padding: 4px 5px;
-    font-size: 10px;
+    flex: 0 1 auto;
+    padding: 7px 10px;
+    font-size: 11px;
+    white-space: nowrap;
   }
   
   .chips {
-    gap: 2px;
+    grid-area: chips;
+    gap: 4px;
+    flex-wrap: wrap;
+    width: 100%;
   }
   
   .chip {
-    padding: 2px 4px;
-    font-size: 7px;
+    padding: 3px 7px;
+    font-size: 9px;
+  }
+  
+  .user-menu {
+    grid-area: user;
   }
   
   .user-avatar-btn {
-    width: 24px;
-    height: 24px;
-    font-size: 8px;
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
   }
   
-  .container {
-    padding: 16px;
+  section {
+    padding: 14px;
+  }
+  
+  h2 {
+    font-size: 18px;
+    margin: 4px 0 12px;
   }
   
   .filters, .form {
@@ -440,62 +565,103 @@ body {
   }
   
   input, select, textarea {
-    padding: 10px 12px;
+    padding: 11px 12px;
     font-size: 16px;
   }
   
   button {
-    padding: 10px 14px;
+    padding: 11px 14px;
     font-size: 14px;
+  }
+  
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   table {
     font-size: 13px;
+    min-width: 600px;
   }
   
   th, td {
-    padding: 8px 6px;
+    padding: 10px 8px;
   }
   
   .actions {
-    flex-direction: column;
-    gap: 4px;
+    flex-direction: row;
+    gap: 6px;
+    flex-wrap: wrap;
   }
   
   .actions a, .actions button {
-    width: 100%;
-    padding: 8px 12px;
+    padding: 8px 10px;
     font-size: 12px;
   }
   
-  h2 {
-    font-size: 18px;
-    margin: 4px 0 12px;
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
   
-  section {
-    padding: 16px;
+  .kpi {
+    padding: 10px 12px;
+  }
+  
+  .kpi-title {
+    font-size: 11px;
+  }
+  
+  .kpi-value {
+    font-size: 20px;
+  }
+  
+  .notes li {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-xs);
+    margin-bottom: 8px;
+    border-bottom: none;
+  }
+  
+  .auth-card {
+    padding: 2rem 1.5rem;
   }
 }
 
 @media (max-width: 480px) {
+  .container {
+    padding: 12px;
+  }
+  
   .header {
     grid-template-columns: 1fr auto;
     grid-template-areas:
       "logo user"
       "nav nav"
       "chips chips";
-    gap: 6px 8px;
-    padding: 6px 10px;
-    position: static;
+    gap: 8px;
+    padding: 10px 12px;
+    position: relative;
+    top: 0;
     margin-bottom: 16px;
     align-items: start;
   }
   
   .header h1 {
     grid-area: logo;
-    font-size: 11px;
+    font-size: 12px;
     gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .header h1::before {
+    width: 10px;
+    height: 10px;
   }
   
   .header nav {
@@ -504,13 +670,13 @@ body {
     display: flex;
     flex-wrap: wrap;
     overflow-x: visible;
-    padding-bottom: 2px;
-    margin-top: 2px;
     width: 100%;
+    justify-content: flex-start;
   }
   
   .header nav a {
-    padding: 5px 8px;
+    flex: 0 1 auto;
+    padding: 7px 11px;
     font-size: 11px;
     white-space: nowrap;
   }
@@ -520,83 +686,84 @@ body {
     gap: 4px;
     flex-wrap: wrap;
     width: 100%;
-    margin-top: 2px;
   }
   
   .chip {
-    padding: 2px 4px;
-    font-size: 7px;
+    flex: 0 1 auto;
+    padding: 3px 7px;
+    font-size: 9px;
     min-width: 0;
   }
   
-  .user-avatar-btn {
+  .user-menu {
     grid-area: user;
-    width: 32px;
-    height: 32px;
-    font-size: 10px;
   }
   
-  .container {
-    padding: 12px;
+  .user-avatar-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
+  }
+  
+  section {
+    padding: 14px;
+  }
+  
+  h2 {
+    font-size: 17px;
+    margin: 4px 0 12px;
   }
   
   .filters, .form {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 10px;
   }
   
   input, select, textarea {
-    padding: 10px 12px;
+    padding: 11px 13px;
     font-size: 16px;
   }
   
   button {
-    padding: 10px 12px;
+    padding: 11px 14px;
     font-size: 13px;
   }
   
   .table-wrapper {
     overflow-x: auto;
-    margin-top: 8px;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 10px;
   }
   
   table {
-    font-size: 11px;
-    min-width: 100%;
+    font-size: 12px;
+    min-width: 550px;
   }
   
   th, td {
-    padding: 6px 4px;
+    padding: 8px 6px;
     white-space: nowrap;
   }
   
   th {
-    font-size: 10px;
-  }
-  
-  .actions {
-    gap: 2px;
-    white-space: normal;
-  }
-  
-  .actions a, .actions button {
-    padding: 6px 10px;
     font-size: 11px;
   }
   
+  .actions {
+    gap: 4px;
+    white-space: normal;
+    flex-wrap: wrap;
+  }
   
+  .actions a, .actions button {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+  
+  /* Hide less important columns on small screens */
   th:nth-child(4),
   td:nth-child(4) {
-    display: none;
-  }
-  
-  h2 {
-    font-size: 16px;
-    margin: 2px 0 10px;
-  }
-  
-  section {
-    padding: 12px;
+    display: table-cell;
   }
   
   label {
@@ -621,105 +788,144 @@ body {
     font-size: 18px;
     margin-top: 2px;
   }
+  
+  .notes li {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-xs);
+    margin-bottom: 8px;
+    border-bottom: none;
+  }
+  
+  .card {
+    padding: 14px;
+  }
+  
+  .auth-card {
+    padding: 2rem 1.5rem;
+    max-width: 100%;
+  }
+  
+  .auth-card h2 {
+    font-size: 1.3rem;
+  }
 }
 
 @media (max-width: 375px) {
+  .container {
+    padding: 10px;
+  }
+  
   .header {
     grid-template-columns: 1fr auto;
     grid-template-areas:
       "logo user"
       "nav nav"
       "chips chips";
-    gap: 4px 6px;
-    padding: 5px 8px;
+    gap: 8px;
+    padding: 8px 10px;
     align-items: start;
   }
   
   .header h1 {
     grid-area: logo;
-    font-size: 10px;
-    gap: 4px;
+    font-size: 11px;
+    gap: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .header h1::before {
+    width: 9px;
+    height: 9px;
   }
   
   .header nav {
     grid-area: nav;
     display: flex;
-    gap: 4px;
+    gap: 5px;
     flex-wrap: wrap;
     overflow-x: visible;
-    padding-bottom: 2px;
     width: 100%;
   }
   
-  .chips {
-    gap: 2px;
-  }
-  
-  .chip {
-    padding: 1px 3px;
-    font-size: 5px;
-  }
-  
-  .user-avatar-btn {
-    width: 32px;
-    height: 32px;
+  .header nav a {
+    flex: 0 1 auto;
+    padding: 6px 10px;
     font-size: 10px;
   }
   
-  .container {
-    padding: 8px;
+  .chips {
+    gap: 3px;
+    flex-wrap: wrap;
+  }
+  
+  .chip {
+    padding: 3px 6px;
+    font-size: 8px;
+  }
+  
+  .user-avatar-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 10px;
+  }
+  
+  section {
+    padding: 12px;
+  }
+  
+  h2 {
+    font-size: 16px;
+    margin: 4px 0 10px;
   }
   
   .filters, .form {
-    gap: 6px;
+    gap: 8px;
   }
   
   input, select, textarea {
-    padding: 8px 10px;
+    padding: 10px 12px;
     font-size: 16px;
   }
   
   button {
-    padding: 8px 10px;
-    font-size: 12px;
+    padding: 10px 12px;
+    font-size: 13px;
   }
   
   .table-wrapper {
     overflow-x: auto;
-    margin-top: 6px;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 8px;
   }
   
   table {
-    font-size: 9px;
-    min-width: 100%;
+    font-size: 11px;
+    min-width: 500px;
   }
   
   th, td {
-    padding: 3px 2px;
+    padding: 6px 4px;
     white-space: nowrap;
   }
   
   th {
-    font-size: 8px;
+    font-size: 10px;
   }
   
   .actions {
-    gap: 1px;
+    gap: 3px;
     white-space: normal;
+    flex-wrap: wrap;
   }
   
   .actions a, .actions button {
-    padding: 4px 6px;
-    font-size: 9px;
-  }
-  
-  h2 {
-    font-size: 14px;
-    margin: 2px 0 8px;
-  }
-  
-  section {
-    padding: 10px;
+    padding: 6px 9px;
+    font-size: 10px;
   }
   
   label {
@@ -745,6 +951,29 @@ body {
   .kpi-value {
     font-size: 16px;
     margin-top: 2px;
+  }
+  
+  .notes li {
+    padding: 10px;
+  }
+  
+  .card {
+    padding: 12px;
+  }
+  
+  .auth-card {
+    padding: 1.5rem 1rem;
+  }
+  
+  .auth-card h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .auth-card input,
+  .auth-card button {
+    padding: 0.65rem;
+    font-size: 0.95rem;
   }
 }
 
@@ -782,7 +1011,12 @@ h2 {
 }
 .form.inline { grid-template-columns: 1fr 200px auto; margin-top: 8px; }
 
-label { font-weight: 600; color: var(--txt); }
+label { 
+  font-weight: 600; 
+  color: var(--txt);
+  display: block;
+  margin-bottom: 6px;
+}
 
 input, select, textarea {
   width: 100%;
@@ -792,14 +1026,47 @@ input, select, textarea {
   background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.04));
   color: var(--txt);
   outline: none;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 44px;
+  
   transition: border-color var(--anim), box-shadow var(--anim), transform var(--anim-fast);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
-input:hover, select:hover, textarea:hover { transform: translateY(-0.5px); }
+
+input:hover, select:hover, textarea:hover { 
+  transform: translateY(-0.5px); 
+}
+
 input:focus, select:focus, textarea:focus {
   border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
   box-shadow: 0 0 0 3px rgba(124,58,237,0.22);
+  transform: translateY(0);
 }
-textarea { min-height: 120px; }
+
+/* Better select styling */
+select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+textarea { 
+  min-height: 120px; 
+  resize: vertical;
+}
+
+/* Remove hover effects on touch devices */
+@media (hover: none) {
+  input:hover, select:hover, textarea:hover {
+    transform: none;
+  }
+}
 
 /* ================== Buttons ================== */
 button {
@@ -814,9 +1081,16 @@ button {
   background: linear-gradient(180deg, rgba(124,58,237,0.38), rgba(124,58,237,0.18));
   color: #fff;
   cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.5;
 
   transition: transform var(--anim-fast), box-shadow var(--anim), background var(--anim);
   box-shadow: 0 8px 22px rgba(124,58,237,0.30);
+  
+  /* Better touch target */
+  min-height: 44px;
+  touch-action: manipulation;
 }
 button:hover {
   transform: translateY(-1px);
@@ -843,11 +1117,28 @@ button:active::after { opacity: 1; }
 }
 .btn-ghost:hover { background: rgba(255,255,255,0.12); }
 
+/* Disable hover effects on touch devices */
+@media (hover: none) {
+  button:hover {
+    transform: none;
+  }
+  
+  .header nav a:hover::after {
+    transform: scaleX(0);
+  }
+  
+  .chip:hover {
+    transform: none;
+  }
+}
+
 /* ================== Table ================== */
 .table-wrapper {
   overflow-x: auto;
   border-radius: var(--radius);
   margin-top: 12px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
 table {
@@ -865,15 +1156,31 @@ thead th {
   font-weight: 700;
   color: var(--txt-dim);
   background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
-tbody tr { transition: background var(--anim); }
+tbody tr { 
+  transition: background var(--anim);
+}
 tbody tr:hover {
   background: linear-gradient(180deg, rgba(124,58,237,0.10), rgba(34,211,238,0.06));
+}
+tbody tr:active {
+  background: linear-gradient(180deg, rgba(124,58,237,0.15), rgba(34,211,238,0.09));
 }
 td.actions {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Remove hover on touch devices */
+@media (hover: none) {
+  tbody tr:hover {
+    background: transparent;
+  }
 }
 
 /* ================== Cards grid ================== */
@@ -1148,6 +1455,154 @@ td.actions {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Landscape mode optimizations for mobile */
+@media (max-height: 600px) and (orientation: landscape) {
+  .auth-page {
+    padding: 1rem;
+  }
+  
+  .auth-card {
+    padding: 1.5rem 2rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .auth-card h2 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+  
+  .auth-card form {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .header {
+    position: relative;
+    top: 0;
+  }
+  
+  .container {
+    padding: 10px;
+  }
+  
+  section {
+    padding: 12px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 320px) {
+  .container {
+    padding: 8px;
+  }
+  
+  .header {
+    padding: 8px;
+    gap: 6px;
+  }
+  
+  .header h1 {
+    font-size: 10px;
+  }
+  
+  .header nav a {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+  
+  .chip {
+    padding: 2px 5px;
+    font-size: 8px;
+  }
+  
+  section {
+    padding: 10px;
+  }
+  
+  h2 {
+    font-size: 14px;
+  }
+  
+  input, select, textarea, button {
+    font-size: 14px;
+    padding: 9px 10px;
+  }
+  
+  .kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .auth-card {
+    padding: 1rem 0.75rem;
+  }
+  
+  .auth-card h2 {
+    font-size: 1.1rem;
+  }
+}
+
+/* Optimizations for foldable devices and tablets in portrait */
+@media (min-width: 600px) and (max-width: 900px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .header nav {
+    justify-content: center;
+  }
+  
+  .notes li {
+    grid-template-columns: 140px 100px 1fr;
+  }
+}
+
+/* Prevent text from being too small on small screens */
+@media (max-width: 400px) {
+  body {
+    font-size: 14px;
+  }
+  
+  * {
+    scrollbar-width: thin;
+  }
+  
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  .container {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+  
+  .header {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+  
+  @media (max-width: 640px) {
+    .container {
+      padding-left: max(14px, env(safe-area-inset-left));
+      padding-right: max(14px, env(safe-area-inset-right));
+    }
+    
+    .header {
+      padding-left: max(12px, env(safe-area-inset-left));
+      padding-right: max(12px, env(safe-area-inset-right));
+    }
   }
 }
 
