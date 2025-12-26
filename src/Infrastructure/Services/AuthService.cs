@@ -94,7 +94,10 @@ public class AuthService : IAuthService
 
     public string GenerateAccessToken(User user)
     {
-        var jwtSecret = _configuration["Jwt:SecretKey"] ?? "super-secret-key-change-this-in-production";
+        // CRITICAL: Must match Program.cs - check ENV variable first!
+        var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+                        ?? _configuration["Jwt:SecretKey"] 
+                        ?? "super-secret-key-change-this-in-production";
         var jwtIssuer = _configuration["Jwt:Issuer"] ?? "JobTracker";
         var jwtAudience = _configuration["Jwt:Audience"] ?? "JobTrackerApi";
 
