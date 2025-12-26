@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -89,42 +90,39 @@ var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "JobTrackerApi";
 
 Console.WriteLine($"🔐 JWT Config - Secret Length: {jwtSecret.Length}, Issuer: {jwtIssuer}, Audience: {jwtAudience}");
 
+// Create signing key once
+var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret));
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
-    Console.WriteLine("🔧 Configuring JWT with NO Configuration Manager");
+    Console.WriteLine("🔧 Configuring JWT with FORCE LEGACY HANDLER");
+    
+    // FORCE use of legacy JwtSecurityTokenHandler
+    JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+    options.SecurityTokenValidators.Clear();
+    options.SecurityTokenValidators.Add(new CustomJwtSecurityTokenHandler());
     
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
+        IssuerSigningKey = signingKey,
         ValidateIssuer = true,
         ValidIssuer = jwtIssuer,
         ValidateAudience = true,
         ValidAudience = jwtAudience,
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero,
-        // CRITICAL: Tell validator to NOT look for Configuration
-        TryAllIssuerSigningKeys = false
+        ClockSkew = TimeSpan.Zero
     };
     
-    // NUCLEAR OPTION: Kill configuration manager completely
-    options.ConfigurationManager = null!;
-    options.Configuration = null;
-    options.MetadataAddress = null;
+    // Disable OIDC
     options.RequireHttpsMetadata = false;
     
     options.Events = new JwtBearerEvents
     {
-        // Force configuration to stay null during auth
-        OnMessageReceived = context =>
-        {
-            context.Options.Configuration = null;
-            return Task.CompletedTask;
-        },
         OnTokenValidated = context =>
         {
             var tokenBlacklist = context.HttpContext.RequestServices.GetRequiredService<ITokenBlacklistService>();
