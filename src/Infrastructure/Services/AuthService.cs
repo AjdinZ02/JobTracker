@@ -100,6 +100,10 @@ public class AuthService : IAuthService
 
         var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
         var key = System.Text.Encoding.ASCII.GetBytes(jwtSecret);
+        var signingKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key);
+        
+        // CRITICAL: Add KeyId to make JsonWebTokenHandler happy
+        signingKey.KeyId = "JobTrackerKey2025";
 
         var tokenDescriptor = new Microsoft.IdentityModel.Tokens.SecurityTokenDescriptor
         {
@@ -114,7 +118,7 @@ public class AuthService : IAuthService
             Issuer = jwtIssuer,
             Audience = jwtAudience,
             SigningCredentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(
-                new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
+                signingKey,
                 Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256Signature)
         };
 

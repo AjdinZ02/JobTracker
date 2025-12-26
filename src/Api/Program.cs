@@ -90,8 +90,11 @@ var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "JobTrackerApi";
 
 Console.WriteLine($"🔐 JWT Config - Secret Length: {jwtSecret.Length}, Issuer: {jwtIssuer}, Audience: {jwtAudience}");
 
-// Create signing key once
-var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret));
+// Create signing key with KeyId to match JsonWebTokenHandler expectations
+var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret))
+{
+    KeyId = "JobTrackerKey2025"
+};
 
 builder.Services.AddAuthentication(options =>
 {
@@ -99,7 +102,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
-    Console.WriteLine("🔧 Configuring JWT with FORCE LEGACY HANDLER");
+    Console.WriteLine("🔧 JWT with KeyId configured");
     
     // FORCE use of legacy JwtSecurityTokenHandler
     JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
