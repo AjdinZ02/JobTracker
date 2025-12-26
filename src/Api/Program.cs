@@ -95,10 +95,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
-    Console.WriteLine("🔧 Configuring JWT with LEGACY JwtSecurityTokenHandler");
-    
-    // CRITICAL: Force use of legacy JwtSecurityTokenHandler (doesn't require kid)
-    options.UseSecurityTokenValidators = true;
+    Console.WriteLine("🔧 Configuring JWT with NO Configuration Manager");
     
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -109,17 +106,25 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidAudience = jwtAudience,
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        // CRITICAL: Tell validator to NOT look for Configuration
+        TryAllIssuerSigningKeys = false
     };
     
-    // Disable OIDC
+    // NUCLEAR OPTION: Kill configuration manager completely
+    options.ConfigurationManager = null!;
     options.Configuration = null;
     options.MetadataAddress = null;
     options.RequireHttpsMetadata = false;
     
-    // Check if token is blacklisted
     options.Events = new JwtBearerEvents
     {
+        // Force configuration to stay null during auth
+        OnMessageReceived = context =>
+        {
+            context.Options.Configuration = null;
+            return Task.CompletedTask;
+        },
         OnTokenValidated = context =>
         {
             var tokenBlacklist = context.HttpContext.RequestServices.GetRequiredService<ITokenBlacklistService>();
