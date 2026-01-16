@@ -18,29 +18,6 @@ Web aplikacija za praćenje prijava na poslove. .NET 9 backend + React TypeScrip
 **Backend:** ASP.NET Core 9, EF Core, PostgreSQL (prod) / SQLite (dev), JWT  
 **Frontend:** React 18, TypeScript, Vite, React Router
 
-### Backend
-```bash
-cd src/Api
-dotnet ef database update
-dotnet run
-# API: http://localhost:5000
-```
-
-### Frontend
-```bash
-cd web
-npm install
-npm run dev
-# App: http://localhost:5173
-```
-
-## 🔌 API Endpoints
-
-**Auth:** `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`  
-**Jobs:** `GET/POST/PUT/DELETE /api/job-applications`, `GET /api/job-applications/stats`
-
-Filteri: `status`, `search`, `from`, `to`
-
 ## 🌐 Deployment
 
 **Backend:** Render (Docker)  
@@ -82,30 +59,7 @@ Web application for tracking job applications. .NET 9 backend + React TypeScript
 **Backend:** ASP.NET Core 9, EF Core, PostgreSQL (prod) / SQLite (dev), JWT  
 **Frontend:** React 18, TypeScript, Vite, React Router
 
-## 🚀 Quick Start
 
-### Backend
-```bash
-cd src/Api
-dotnet ef database update
-dotnet run
-# API: http://localhost:5000
-```
-
-### Frontend
-```bash
-cd web
-npm install
-npm run dev
-# App: http://localhost:5173
-```
-
-## 🔌 API Endpoints
-
-**Auth:** `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`  
-**Jobs:** `GET/POST/PUT/DELETE /api/job-applications`, `GET /api/job-applications/stats`
-
-Filters: `status`, `search`, `from`, `to`
 
 ## 🌐 Deployment
 
